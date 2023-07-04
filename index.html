@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>MyTask</title>
+  <base href="/">
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+ <style>
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  th, td {
+    border: 1px solid black;
+    padding: 8px;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  input, select {
+    margin-right: 10px;
+  }
+ </style>
+<body>
+  <div ng-app="taskApp">
+    <div ng-controller="TaskController">
+        <h1>Task Management App</h1>
+        <div>
+          <input type="text" ng-model="newTask" placeholder="New Task">
+          <select ng-model="newTaskUser" ng-options="user for user in users">
+            <option value="" >Assign to User</option>
+          </select>
+          <button ng-click="addTask()">Add Task</button>
+        </div>
+        <div>
+          <h2>Tasks</h2>
+          <select ng-model="taskFilter" ng-options="user for user in users">
+            <option value="">Filter by User</option>
+          </select>
+          <button ng-click="clearFilter()">Clear Filter</button>
+          <br><br>
+          <table>
+            <tr>
+              <th>Task</th>
+              <th>User</th>
+              <th>Actions</th>
+            </tr>
+            <tr ng-repeat="task in tasks | filter: taskFilter track by $index">
+              <td>{{ task.name }}</td>
+              <td>{{ task.user }}</td>
+              <td><button ng-click="deleteTask(task)">Delete</button>
+                &nbsp;
+              <button ng-click="editTask(task,$index)">Edit</button>
+            </td>
+            </tr>
+          </table>
+          <div ng-show="isEditing">
+            <h2>Edit Task:</h2>
+            <form ng-submit="updateTask()">
+                <input #getValuename type="text" ng-model="editedTask.name" required>
+                  <select ng-model="editedTask.assignee" ng-options="user for user in users" required>
+                                    <option value="" disabled selected>Select assignee</option>
+                </select>
+                <button type="submit">Save</button>
+                <button type="button" ng-click="cancelEdit()">Cancel</button>
+            </form>
+            {{editedTask.name}}
+            {{editedTask.assignee}}
+        </div>
+        </div>
+       </div>
+    </div>
+    <script>
+      var app = angular.module('taskApp', []);     
+   app.controller('TaskController', function ($scope) {
+     $scope.tasks = [];
+     $scope.users = ['User 1', 'User 2', 'User 3'];
+     var index=0;
+
+     
+     $scope.addTask = function() {
+       if ($scope.newTask && $scope.newTaskUser) {
+         $scope.tasks.push({
+           name: $scope.newTask,
+           user: $scope.newTaskUser
+         })
+         $scope.tasks.sort((a,b)=>{
+           var textA = a.name.toUpperCase();
+           var textB = b.name.toUpperCase();
+           return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+         })
+         $scope.newTask = '';
+         $scope.newTaskUser = '';
+       }
+     };
+
+
+$scope.editTask = function (task,index) {
+    $scope.index=index
+    console.log("task",task)
+    $scope.isEditing = true;
+    $scope.editedTask = angular.copy(task);
+    
+    console.log('$scope.editedTask', $scope.editedTask )
+    $scope.editedTask.assignee = $scope.users.find(function (user) {
+          return user === task.user
+
+    }) 
+};
+
+$scope.updateTask = function () {
+  $scope.tasks[$scope.index].name = $scope.editedTask.name;
+        $scope.tasks[$scope.index].user = $scope.editedTask.assignee;  
+    $scope.isEditing = false;
+   $scope.editedTask = {};
+};
+
+$scope.cancelEdit = function () {
+    $scope.isEditing = false;
+    $scope.editedTask = {};
+};
+     
+     $scope.deleteTask = function(task) {
+       var index = $scope.tasks.indexOf(task);
+       if (index > -1) {
+         $scope.tasks.splice(index, 1);
+       }
+     };
+     
+     $scope.clearFilter = function() {
+       $scope.taskFilter = '';
+     };
+   })
+   </script>
+</body>
+</html>
